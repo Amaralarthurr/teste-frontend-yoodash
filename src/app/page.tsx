@@ -1,103 +1,133 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import type React from "react"
+import { useState, useMemo } from "react"
+import { MainHeader } from "@/components/home/MainHeader"
+import { ErrorDisplay } from "@/components/home/ErrorDisplay"
+import { SearchFilters } from "@/components/home/SearchFilters"
+import { ControlsSection } from "@/components/home/ControlsSection"
+import { LoadingState } from "@/components/home/LoadingState"
+import { CharactersGrid } from "@/components/home/CharactersGrid"
+import { Pagination } from "@/components/home/Pagination"
+import { NoResults } from "@/components/home/NoResults"
+import { Footer } from "@/components/character/Footer"
+import { useFavorites } from "@/hooks/use-favorites"
+import { useCharacters } from "@/hooks/use-characters"
+
+export default function HomePage() {
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+
+  const LIMIT = 20
+  const MAX_FAVORITES = 5
+
+  const { favorites, toggleFavorite } = useFavorites(MAX_FAVORITES)
+  const { characters, loading, searchTerm, setSearchTerm, offset, setOffset, totalCharacters, error, fetchCharacters } =
+    useCharacters(LIMIT)
+
+  const filteredAndSortedCharacters = useMemo(() => {
+    let filtered = characters
+
+    if (showFavoritesOnly) {
+      filtered = characters.filter((char) => favorites.includes(char.id))
+    }
+
+    return filtered.sort((a, b) => {
+      if (sortOrder === "asc") {
+        return a.name.localeCompare(b.name)
+      } else {
+        return b.name.localeCompare(a.name)
+      }
+    })
+  }, [characters, favorites, showFavoritesOnly, sortOrder])
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setOffset(0)
+    fetchCharacters(searchTerm, 0)
+  }
+
+  const handlePageChange = (newOffset: number) => {
+    setOffset(newOffset)
+    window.scrollTo(0, 0)
+  }
+
+  const handleCharacterClick = (characterId: number) => {}
+
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+  }
+
+  const toggleFavoritesFilter = () => {
+    setShowFavoritesOnly((prev) => !prev)
+  }
+
+  const handleClearSearch = () => {
+    setSearchTerm("")
+    setOffset(0)
+    fetchCharacters("", 0)
+  }
+
+  const handleRetry = () => {
+    fetchCharacters(searchTerm, offset)
+  }
+
+  const totalPages = Math.ceil(totalCharacters / LIMIT)
+  const currentPage = Math.floor(offset / LIMIT) + 1
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-[#e7f6e7] font-sans">
+      <MainHeader />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {error && <ErrorDisplay error={error} onRetry={handleRetry} />}
+
+        <SearchFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} handleSearch={handleSearch} />
+
+        <ControlsSection
+          showFavoritesOnly={showFavoritesOnly}
+          filteredCount={filteredAndSortedCharacters.length}
+          charactersCount={characters.length}
+          sortOrder={sortOrder}
+          toggleSortOrder={toggleSortOrder}
+          toggleFavoritesFilter={toggleFavoritesFilter}
+        />
+
+        {loading && <LoadingState />}
+
+        {!loading && !error && (
+          <>
+            <CharactersGrid
+              characters={filteredAndSortedCharacters}
+              favorites={favorites}
+              toggleFavorite={toggleFavorite}
+              handleCharacterClick={handleCharacterClick}
+              maxFavorites={MAX_FAVORITES}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+
+            {!showFavoritesOnly && totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                offset={offset}
+                limit={LIMIT}
+                totalCharacters={totalCharacters}
+              />
+            )}
+
+            {filteredAndSortedCharacters.length === 0 && !loading && (
+              <NoResults
+                showFavoritesOnly={showFavoritesOnly}
+                searchTerm={searchTerm}
+                onClearSearch={handleClearSearch}
+              />
+            )}
+          </>
+        )}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+      <Footer />
     </div>
-  );
+  )
 }
