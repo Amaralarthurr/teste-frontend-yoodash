@@ -23,6 +23,7 @@
 
 # Instale as dependências
 npm install
+npm install lucide-react
 
 # Configure as variáveis de ambiente
 cp .env.example .env.local
