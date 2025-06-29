@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Teste Frontend Marvel Yoodash
 
-## Getting Started
+## Funcionalidades
 
-First, run the development server:
+- **Listagem de Personagens**: Grid responsivo com 20 personagens por página
+- **Busca**: Filtro por nome dos personagens
+- **Favoritos**: Sistema de favoritos com limite de 5 personagens
+- **Ordenação**: Ordenação alfabética A-Z / Z-A
+- **Detalhes**: Página individual com informações detalhadas, quadrinhos e estatísticas
+- **Responsivo**: Interface adaptável para desktop e mobile
 
-```bash
+## Tecnologias
+
+- **Next.js** - Framework React com App Router
+- **TypeScript** - Tipagem estática
+- **Tailwind CSS** - Estilização utilitária
+- **Marvel API** - Dados dos personagens
+- **LocalStorage** - Persistência de favoritos
+
+## Instalação
+
+# Clone o repositório
+
+# Instale as dependências
+npm install
+
+# Configure as variáveis de ambiente
+cp .env.example .env.local
+
+# Execute o projeto
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Configuração
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Adicione suas chaves da API Marvel no arquivo \`.env.local\`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+NEXT_PUBLIC_MARVEL_PUBLIC_KEY=sua_chave_publica
+NEXT_PUBLIC_MARVEL_PRIVATE_KEY=sua_chave_privada
 
-## Learn More
+## Funcionalidades Principais
 
-To learn more about Next.js, take a look at the following resources:
+### Sistema de Favoritos
+- Máximo de 5 personagens favoritos
+- Persistência via localStorage
+- Sincronização entre páginas
+- Toggle visual para filtrar apenas favoritos
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Busca e Filtros
+- Busca por nome com debounce
+- Ordenação alfabética via API
+- Filtro de favoritos com indicadores visuais
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Página de Detalhes
+- Informações completas do personagem
+- Galeria de quadrinhos (últimos 10)
+- Estatísticas (quadrinhos, filmes, rating)
+- Barra de busca integrada
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Resposta Técnica: Gerenciamento de Estado com Redux/Zustand
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Como você lidaria com o limite de 5 favoritos se estivesse usando Redux ou Zustand?**
+
+Com **Redux**, eu criaria um slice específico para favoritos com actions como \`addFavorite\`, \`removeFavorite\` e \`toggleFavorite\`. O reducer verificaria o limite antes de adicionar novos favoritos, retornando o estado atual se o limite fosse excedido. Utilizaria middleware como Redux Persist para sincronizar com localStorage automaticamente, e selectors para computar estados derivados como \`canAddFavorite\` e \`favoritesCount\`.
+
+Com **Zustand**, a implementação seria mais direta. Criaria um store com estado \`favorites: number[]\` e actions que encapsulam a lógica de limite. A função \`addFavorite\` verificaria \`favorites.length < 5\` antes de adicionar, e utilizaria o middleware \`persist\` para localStorage. Zustand oferece melhor developer experience com menos boilerplate, sendo ideal para este caso de uso específico onde não precisamos de toda a complexidade do Redux.
+
+Ambas as soluções garantiriam consistência de estado, mas Zustand seria minha escolha pela simplicidade e performance, especialmente considerando que o sistema de favoritos é uma funcionalidade relativamente isolada que não requer o ecossistema completo do Redux.
