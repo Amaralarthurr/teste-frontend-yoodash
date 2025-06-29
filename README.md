@@ -34,8 +34,8 @@ npm run dev
 
 Adicione suas chaves da API Marvel no arquivo \`.env.local\`:
 
-NEXT_PUBLIC_MARVEL_PUBLIC_KEY=sua_chave_publica
-NEXT_PUBLIC_MARVEL_PRIVATE_KEY=sua_chave_privada
+MARVEL_PUBLIC_KEY=sua_chave_publica
+MARVEL_PRIVATE_KEY=sua_chave_privada
 
 ## Funcionalidades Principais
 

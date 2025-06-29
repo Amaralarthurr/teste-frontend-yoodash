@@ -4,8 +4,8 @@ import crypto from "crypto"
 const MARVEL_BASE_URL = "https://gateway.marvel.com/v1/public"
 
 function getMarvelAuth() {
-  const publicKey = process.env.NEXT_PUBLIC_MARVEL_PUBLIC_KEY
-  const privateKey = process.env.NEXT_PUBLIC_MARVEL_PRIVATE_KEY
+  const publicKey = process.env.MARVEL_PUBLIC_KEY
+  const privateKey = process.env.MARVEL_PRIVATE_KEY
 
   if (!publicKey || !privateKey) {
     throw new Error("Marvel API keys not configured")
