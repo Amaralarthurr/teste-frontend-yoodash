@@ -11,31 +11,26 @@ export function useCharacterDetail(characterId: string) {
 
   useEffect(() => {
     const fetchCharacterData = async () => {
-      if (!characterId) return
+      if (!characterId) {
+        setLoading(false)
+        return
+      }
 
       try {
-        console.log("Fetching character with ID:", characterId)
+        console.log("=== FETCHING CHARACTER DATA ===")
+        console.log("Character ID:", characterId)
+
+        setLoading(true)
 
         // Fetch character details
+        console.log("1. Fetching character details...")
         const characterResponse = await fetch(`/api/character/${characterId}`)
-        console.log("Character response status:", characterResponse.status)
 
         if (!characterResponse.ok) {
-          throw new Error(`HTTP error! status: ${characterResponse.status}`)
+          throw new Error(`Character API error: ${characterResponse.status}`)
         }
 
-        const characterText = await characterResponse.text()
-        if (!characterText) {
-          throw new Error("Empty response for character data")
-        }
-
-        let characterData
-        try {
-          characterData = JSON.parse(characterText)
-        } catch (parseError) {
-          console.error("Failed to parse character JSON:", characterText)
-          throw new Error("Invalid JSON response for character")
-        }
+        const characterData = await characterResponse.json()
 
         if (characterData.error) {
           throw new Error(characterData.error)
@@ -45,48 +40,30 @@ export function useCharacterDetail(characterId: string) {
           throw new Error("Character not found")
         }
 
-        console.log("Character data received:", characterData.results[0])
+        console.log("✓ Character loaded:", characterData.results[0].name)
         setCharacter(characterData.results[0])
 
-        // Fetch character comics
+        // Fetch comics
+        console.log("2. Fetching character comics...")
         try {
           const comicsResponse = await fetch(`/api/character/${characterId}/comics`)
-          console.log("Comics response status:", comicsResponse.status)
 
           if (comicsResponse.ok) {
-            const comicsText = await comicsResponse.text()
-            console.log("Comics response text length:", comicsText.length)
+            const comicsData = await comicsResponse.json()
 
-            if (comicsText) {
-              try {
-                const comicsData = JSON.parse(comicsText)
-                console.log("Comics data structure:", {
-                  hasError: !!comicsData.error,
-                  hasResults: !!comicsData.results,
-                  resultsLength: comicsData.results?.length || 0,
-                  total: comicsData.total || 0,
-                })
-
-                if (!comicsData.error && comicsData.results) {
-                  console.log("Comics loaded successfully:", comicsData.results.length)
-                  console.log("First comic:", comicsData.results[0])
-                  setComics(comicsData.results)
-                } else {
-                  console.warn("Comics data error or empty results:", comicsData.error)
-                  setComics([])
-                }
-              } catch (parseError) {
-                console.error("Failed to parse comics JSON:", parseError)
-                console.log("Raw comics response:", comicsText)
-                setComics([])
-              }
+            if (comicsData.error) {
+              console.error("Comics API returned error:", comicsData.error)
+              setComics([])
+            } else if (comicsData.results && Array.isArray(comicsData.results)) {
+              console.log("✓ Comics loaded from Marvel API:", comicsData.results.length)
+              setComics(comicsData.results)
             } else {
-              console.warn("Empty comics response")
+              console.warn("No comics results found")
               setComics([])
             }
           } else {
-            const errorText = await comicsResponse.text()
-            console.error("Comics API error:", comicsResponse.status, errorText)
+            const errorData = await comicsResponse.json()
+            console.error("Comics API error:", errorData)
             setComics([])
           }
         } catch (comicsError) {
@@ -94,24 +71,23 @@ export function useCharacterDetail(characterId: string) {
           setComics([])
         }
 
-        // Fetch character events (for movies)
+        // Fetch events
+        console.log("3. Fetching character events...")
         try {
           const eventsResponse = await fetch(`/api/character/${characterId}/events`)
-          console.log("Events response status:", eventsResponse.status)
 
           if (eventsResponse.ok) {
-            const eventsText = await eventsResponse.text()
-            if (eventsText) {
-              const eventsData = JSON.parse(eventsText)
-              if (!eventsData.error && eventsData.results) {
-                console.log("=== EVENTS DEBUG ===")
-                console.log("Events loaded:", eventsData.results.length)
-                console.log("First event:", eventsData.results[0])
-                console.log("Events structure:", eventsData.results.slice(0, 2))
-                console.log("=== END EVENTS DEBUG ===")
-                setEvents(eventsData.results)
-              }
+            const eventsData = await eventsResponse.json()
+
+            if (eventsData.results && Array.isArray(eventsData.results)) {
+              console.log("✓ Events loaded:", eventsData.results.length)
+              setEvents(eventsData.results)
+            } else {
+              setEvents([])
             }
+          } else {
+            console.warn("Events API failed, continuing without events")
+            setEvents([])
           }
         } catch (eventsError) {
           console.warn("Failed to fetch events:", eventsError)

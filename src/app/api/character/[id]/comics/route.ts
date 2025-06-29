@@ -1,92 +1,91 @@
 import { type NextRequest, NextResponse } from "next/server"
-import crypto from "crypto"
+import { md5 } from "@/lib/md5"
 
+const MARVEL_PUBLIC_KEY = process.env.MARVEL_PUBLIC_KEY || "22e9bab7b462ebbd01fee470d5c30192"
+const MARVEL_PRIVATE_KEY = process.env.MARVEL_PRIVATE_KEY || "7cd3684824a067744989aa33c44a0fefb24a8740"
 const MARVEL_BASE_URL = "https://gateway.marvel.com/v1/public"
 
-function getMarvelAuth() {
-  const publicKey = process.env.MARVEL_PUBLIC_KEY
-  const privateKey = process.env.MARVEL_PRIVATE_KEY
-
-  if (!publicKey || !privateKey) {
-    throw new Error("Marvel API keys not configured")
-  }
-
+function generateAuthParams() {
   const timestamp = Date.now().toString()
-  const hash = crypto
-    .createHash("md5")
-    .update(timestamp + privateKey + publicKey)
-    .digest("hex")
+  const toBeHashed = timestamp + MARVEL_PRIVATE_KEY + MARVEL_PUBLIC_KEY
+  const hash = md5(toBeHashed)
 
   return {
     ts: timestamp,
-    apikey: publicKey,
+    apikey: MARVEL_PUBLIC_KEY,
     hash: hash,
   }
 }
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    console.log("=== COMICS API DEBUG ===")
-    console.log("Character ID:", params.id)
+    const characterId = params.id
+    console.log(`=== FETCHING REAL COMICS FOR CHARACTER: ${characterId} ===`)
 
-    if (!params.id) {
-      console.error("Character ID not provided")
-      return NextResponse.json({ error: "Character ID is required" }, { status: 400 })
-    }
+    const authParams = generateAuthParams()
 
-    const auth = getMarvelAuth()
-    console.log("Auth generated successfully")
+    const urlParams = new URLSearchParams({
+      ts: authParams.ts,
+      apikey: authParams.apikey,
+      hash: authParams.hash,
+      limit: "10",
+      orderBy: "-onsaleDate",
+    })
 
-    // Buscar quadrinhos do personagem
-    const comicsUrl = `${MARVEL_BASE_URL}/characters/${params.id}/comics?ts=${auth.ts}&apikey=${auth.apikey}&hash=${auth.hash}&limit=20&orderBy=-onsaleDate&format=comic`
-    console.log("Comics URL:", comicsUrl.replace(auth.apikey, "PUBLIC_KEY").replace(auth.hash, "HASH"))
+    const url = `${MARVEL_BASE_URL}/characters/${characterId}/comics?${urlParams}`
+    console.log("Making request to Marvel API...")
 
-    const response = await fetch(comicsUrl)
-    console.log("Comics API Response Status:", response.status)
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Marvel-App/1.0",
+        Accept: "application/json",
+      },
+    })
+
+    console.log("Marvel API Response Status:", response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error("Comics API Error Response:", errorText)
+      console.error("Marvel API Error:", response.status, errorText)
       return NextResponse.json(
-        { error: `Marvel API error: ${response.status} - ${errorText}` },
+        { error: `Marvel API error: ${response.status}`, details: errorText },
         { status: response.status },
       )
     }
 
     const data = await response.json()
-    console.log("Comics API Response Data Structure:", {
+
+    console.log("Marvel API Response:", {
       code: data.code,
       status: data.status,
-      resultsCount: data.data?.results?.length || 0,
-      total: data.data?.total || 0,
+      totalResults: data.data?.total || 0,
+      returnedResults: data.data?.results?.length || 0,
     })
 
     if (data.code !== 200) {
-      console.error("Marvel API returned error code:", data.code, data.status)
+      console.error("Marvel API returned error:", data.code, data.status)
       return NextResponse.json({ error: `Marvel API error: ${data.status}` }, { status: 400 })
     }
 
-    // Log dos primeiros quadrinhos para debug
+    // Log first comic to verify data structure
     if (data.data?.results?.length > 0) {
-      console.log("First comic sample:", {
-        id: data.data.results[0].id,
-        title: data.data.results[0].title,
-        thumbnail: data.data.results[0].thumbnail,
-        dates: data.data.results[0].dates,
+      const firstComic = data.data.results[0]
+      console.log("First comic from API:", {
+        id: firstComic.id,
+        title: firstComic.title,
+        thumbnail: firstComic.thumbnail,
+        hasDate: firstComic.dates?.length > 0,
       })
     }
 
-    console.log("=== END COMICS API DEBUG ===")
+    console.log(`SUCCESS: Found ${data.data?.results?.length || 0} comics from Marvel API`)
 
-    return NextResponse.json({
-      results: data.data?.results || [],
-      total: data.data?.total || 0,
-    })
+    return NextResponse.json(data.data)
   } catch (error) {
-    console.error("Comics API Error:", error)
+    console.error("Comics API Route Error:", error)
     return NextResponse.json(
       {
-        error: "Failed to fetch character comics",
+        error: "Failed to fetch comics from Marvel API",
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 },

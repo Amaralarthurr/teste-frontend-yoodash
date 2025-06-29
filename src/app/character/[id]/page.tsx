@@ -18,24 +18,38 @@ export default function CharacterDetailPage() {
   const params = useParams()
   const characterId = params.id as string
 
+  console.log("=== CHARACTER PAGE RENDER ===")
+  console.log("Character ID from params:", characterId)
+
   const { favorites, toggleFavorite } = useFavorites(MAX_FAVORITES)
-  const { character, loading, setComics, getLatestComic, displayedComics } = useCharacterDetail(characterId)
+  const { character, loading,  setComics, getLatestComic, displayedComics } =
+    useCharacterDetail(characterId)
   const { searchTerm, setSearchTerm, handleSearch } = useCharacterSearch()
 
+  console.log("Page state:", {
+    loading,
+    hasCharacter: !!character,
+    characterName: character?.name,
+    comicsCount: displayedComics.length,
+  })
+
   if (loading) {
+    console.log("Showing loading state")
     return <LoadingState />
   }
 
-  if (!character) {
+  if (!loading && !character) {
+    console.log("Showing not found state")
     return <NotFoundState characterId={characterId} />
   }
 
-  const isFavorite = favorites.includes(character.id)
+  console.log("Showing character details for:", character?.name)
+  const isFavorite = favorites.includes(character!.id)
 
   return (
     <div className="min-h-screen bg-[#e7f6e7] font-sans">
       <MainHeader
-        characterName={character.name}
+        characterName={character!.name}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         handleSearch={handleSearch}
@@ -43,10 +57,10 @@ export default function CharacterDetailPage() {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <CharacterDetails
-          character={character}
+          character={character!}
           isFavorite={isFavorite}
           canToggleFavorite={isFavorite || favorites.length < MAX_FAVORITES}
-          toggleFavorite={() => toggleFavorite(character.id)}
+          toggleFavorite={() => toggleFavorite(character!.id)}
           formatShortDate={formatShortDate}
           getLatestComic={getLatestComic}
         />

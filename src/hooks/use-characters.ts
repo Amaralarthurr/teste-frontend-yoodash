@@ -1,20 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useState, useEffect, useCallback } from "react"
+import type { Character } from "@/types/marvel"
 
-interface Character {
-  id: number
-  name: string
-  description: string
-  thumbnail: {
-    path: string
-    extension: string
-  }
+interface UseCharactersReturn {
+  characters: Character[]
+  loading: boolean
+  searchTerm: string
+  setSearchTerm: (term: string) => void
+  offset: number
+  setOffset: (offset: number) => void
+  totalCharacters: number
+  error: string | null
+  fetchCharacters: (search?: string, newOffset?: number) => void
 }
 
-export function useCharacters(limit = 20) {
-  const searchParams = useSearchParams()
+export function useCharacters(limit = 20): UseCharactersReturn {
   const [characters, setCharacters] = useState<Character[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -22,88 +23,81 @@ export function useCharacters(limit = 20) {
   const [totalCharacters, setTotalCharacters] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
-  // Load search term from URL parameters
-  useEffect(() => {
-    const urlSearchTerm = searchParams.get("nameStartsWith")
-    if (urlSearchTerm) {
-      console.log("=== URL SEARCH DETECTED ===")
-      console.log("Search term from URL:", urlSearchTerm)
-      setSearchTerm(urlSearchTerm)
-      setOffset(0)
-    }
-  }, [searchParams])
-
-  const fetchCharacters = async (searchName = "", currentOffset = 0) => {
-    setLoading(true)
-    setError(null)
-    try {
-      let url = `/api/characters?limit=${limit}&offset=${currentOffset}`
-      if (searchName) {
-        url += `&nameStartsWith=${encodeURIComponent(searchName)}`
-      }
-
-      console.log("Fetching from:", url)
-      const response = await fetch(url)
-      console.log("Response status:", response.status)
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error("HTTP Error Response:", errorText)
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
-      }
-
-      const text = await response.text()
-      if (!text) {
-        throw new Error("Empty response from server")
-      }
-
-      let data
+  const fetchCharacters = useCallback(
+    async (search?: string, newOffset?: number) => {
       try {
-        data = JSON.parse(text)
-      } catch (parseError) {
-        console.error("Failed to parse JSON:", text)
-        throw new Error("Invalid JSON response from server")
-      }
+        setLoading(true)
+        setError(null)
 
-      if (data.error) {
-        throw new Error(data.error)
-      }
+        const currentOffset = newOffset ?? offset
+        const currentSearch = search ?? searchTerm
 
-      if (!data.results || !Array.isArray(data.results)) {
-        throw new Error("Invalid data structure received")
-      }
+        const params = new URLSearchParams({
+          limit: limit.toString(),
+          offset: currentOffset.toString(),
+        })
 
-      setCharacters(data.results)
-      setTotalCharacters(data.total || 0)
-      console.log("Successfully loaded", data.results.length, "characters")
-    } catch (error) {
-      console.error("Error fetching characters:", error)
-      setCharacters([])
-      setTotalCharacters(0)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      setError(errorMessage)
-    } finally {
-      setLoading(false)
-    }
-  }
+        if (currentSearch && currentSearch.trim()) {
+          params.append("nameStartsWith", currentSearch.trim())
+        }
 
-  const testMarvelAPI = async () => {
-    try {
-      const response = await fetch("/api/test-marvel")
-      const result = await response.json()
-      console.log("Marvel API Test Result:", result)
-      if (!result.success) {
-        setError(`API Test Failed: ${result.error}`)
+        console.log("=== FETCHING CHARACTERS ===")
+        console.log("Params:", {
+          limit,
+          offset: currentOffset,
+          search: currentSearch,
+        })
+
+        const response = await fetch(`/api/characters?${params}`)
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        console.log("=== CHARACTERS API RESPONSE ===")
+        console.log("Response data:", {
+          resultsCount: data.results?.length || 0,
+          total: data.total || 0,
+          offset: data.offset || 0,
+          limit: data.limit || 0,
+        })
+
+        setCharacters(data.results || [])
+        setTotalCharacters(data.total || 0)
+
+        // Update offset if a new value was passed
+        if (newOffset !== undefined) {
+          setOffset(newOffset)
+        }
+
+        // Update searchTerm if a new value was passed
+        if (search !== undefined) {
+          setSearchTerm(search)
+        }
+
+        console.log("=== STATE UPDATED ===")
+        console.log("Characters set:", data.results?.length || 0)
+        console.log("Total characters set:", data.total || 0)
+        console.log("Offset set:", newOffset !== undefined ? newOffset : offset)
+      } catch (err) {
+        console.error("Error fetching characters:", err)
+        setError(err instanceof Error ? err.message : "Failed to fetch characters")
+        // Set some default values to test pagination
+        setTotalCharacters(100)
+        setCharacters([])
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error("Failed to test Marvel API:", error)
-    }
-  }
+    },
+    [limit, offset, searchTerm],
+  )
 
   useEffect(() => {
-    testMarvelAPI()
-    fetchCharacters(searchTerm, offset)
-  }, [searchTerm, offset])
+    fetchCharacters()
+  }, [])
 
   return {
     characters,
