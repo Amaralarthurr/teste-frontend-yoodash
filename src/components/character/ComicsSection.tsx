@@ -25,7 +25,6 @@ interface ComicsSectionProps {
 
 export function ComicsSection({ displayedComics, formatDate, characterId, setComics }: ComicsSectionProps) {
   const handleRetryComics = async () => {
-    console.log("Retrying comics fetch for character:", characterId)
     try {
       const response = await fetch(`/api/character/${characterId}/comics`)
 
@@ -37,10 +36,8 @@ export function ComicsSection({ displayedComics, formatDate, characterId, setCom
       }
 
       const data = await response.json()
-      console.log("Comics retry response:", data)
 
       if (data.results && Array.isArray(data.results)) {
-        console.log("✓ Comics retry successful, found:", data.results.length)
         setComics(data.results)
       } else {
         console.warn("No comics results in retry response")
@@ -56,14 +53,6 @@ export function ComicsSection({ displayedComics, formatDate, characterId, setCom
     <div className="bg-white rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-bold text-gray-600">Últimos lançamentos</h3>
-
-        <button
-          onClick={handleRetryComics}
-          className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Atualizar
-        </button>
       </div>
 
       {displayedComics.length > 0 ? (

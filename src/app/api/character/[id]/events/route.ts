@@ -17,7 +17,6 @@ function generateAuthParams() {
   }
 }
 
-// Mock events data for fallback
 const mockEventsData = {
   1011334: [
     {
@@ -60,7 +59,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   try {
     const characterId = params.id
 
-    console.log(`=== EVENTS API - ID: ${characterId} ===`)
 
     if (!characterId) {
       return NextResponse.json({ error: "Character ID is required" }, { status: 400 })
@@ -85,10 +83,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         },
       })
 
-      console.log("Events response status:", response.status)
-
       if (!response.ok) {
-        console.log("Marvel API error, returning mock events data")
         const mockEvents =
           (mockEventsData as Record<number, any>)[Number(characterId)] || generateMockEvents(characterId)
 
@@ -111,14 +106,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         })
       }
 
-      console.log("Success! Events found:", data.data?.results?.length || 0)
 
       return NextResponse.json({
         results: data.data?.results || [],
         total: data.data?.total || 0,
       })
     } catch (fetchError) {
-      console.log("Fetch failed, returning mock events data:", fetchError)
       const mockEvents = (mockEventsData as Record<number, any>)[Number(characterId)] || generateMockEvents(characterId)
 
       return NextResponse.json({

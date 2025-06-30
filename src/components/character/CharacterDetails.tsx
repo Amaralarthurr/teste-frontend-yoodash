@@ -40,7 +40,6 @@ export function CharacterDetails({
   return (
     <div className="bg-white rounded-lg overflow-hidden mb-8">
       <div className="md:flex">
-        {/* Text Content - Left Side (larger) */}
         <div className="md:w-2/3 p-6 order-1 md:order-1">
           <div className="flex justify-between items-start mb-4">
             <h2 className="text-2xl font-bold text-gray-600">{character.name}</h2>
@@ -72,17 +71,13 @@ export function CharacterDetails({
             </button>
           </div>
 
-          {/* Description */}
           {character.description ? (
             <p className="text-gray-600 leading-relaxed mb-6">{character.description}</p>
           ) : (
             <p className="text-gray-500 italic mb-6">Nenhuma descrição disponível para este personagem.</p>
           )}
 
-          {/* Quadrinhos Label */}
-          {/* Quadrinhos and Filmes Row */}
           <div className="flex items-center gap-14 mb-4">
-            {/* Quadrinhos */}
             <div className="flex items-center flex-col">
               <div className="text-sm text-gray-600 font-bold mb-2">Quadrinhos</div>
               <div className="flex flex-row border w-full gap-2">
@@ -91,7 +86,6 @@ export function CharacterDetails({
               </div>
             </div>
 
-            {/* Filmes */}
             <div className="flex items-center flex-col">
               <div className="text-sm text-gray-600 font-bold mb-2">Filmes</div>
               <div className="flex flex-row border w-full gap-2">
@@ -101,14 +95,12 @@ export function CharacterDetails({
             </div>
           </div>
 
-          {/* Rating Row */}
           <div className="flex items-center gap-2 mb-4">
             <p className="text-gray-600 font-bold text-sm">Rating: </p>
             <Image src="/assets/img/rating.png" alt="Rating stars" width={64} height={16} className="object-contain" />
             {character.rating && <span className="text-lg font-bold text-gray-600">{character.rating}/10</span>}
           </div>
 
-          {/* Último Quadrinho Row */}
           <div className="flex gap-2 mb-4 items-start">
             <Calendar className="w-5 h-5 text-primary" />
             <span className="text-sm font-bold text-gray-600">Último Quadrinho:</span>
@@ -127,7 +119,6 @@ export function CharacterDetails({
           </div>
         </div>
 
-        {/* Image - Right Side (smaller) */}
         <div className="md:w-1/3 order-2 md:order-2">
           <div className="relative aspect-square">
             <Image

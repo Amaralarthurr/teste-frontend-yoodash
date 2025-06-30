@@ -5,7 +5,6 @@ import { useState, useEffect } from "react"
 export function useFavorites(maxFavorites = 5) {
   const [favorites, setFavorites] = useState<number[]>([])
 
-  // Load favorites from localStorage
   useEffect(() => {
     const savedFavorites = localStorage.getItem("marvelFavorites")
     if (savedFavorites) {
@@ -13,26 +12,21 @@ export function useFavorites(maxFavorites = 5) {
     }
   }, [])
 
-  // Save favorites to localStorage
   useEffect(() => {
     localStorage.setItem("marvelFavorites", JSON.stringify(favorites))
   }, [favorites])
 
-  // Sync favorites across pages
   useEffect(() => {
     const handleStorageChange = () => {
       console.log("=== STORAGE CHANGE DETECTED ===")
       const savedFavorites = localStorage.getItem("marvelFavorites")
       if (savedFavorites) {
         const parsedFavorites = JSON.parse(savedFavorites)
-        console.log("Updated favorites from storage:", parsedFavorites)
         setFavorites(parsedFavorites)
       }
     }
 
     const handleFavoritesChanged = (event: any) => {
-      console.log("=== FAVORITES CHANGED EVENT ===")
-      console.log("Event detail:", event.detail)
       handleStorageChange()
     }
 
@@ -46,9 +40,6 @@ export function useFavorites(maxFavorites = 5) {
   }, [])
 
   const toggleFavorite = (characterId: number) => {
-    console.log("=== HOMEPAGE TOGGLE FAVORITE ===")
-    console.log("Character ID:", characterId)
-    console.log("Current favorites:", favorites)
 
     const newFavorites = favorites.includes(characterId)
       ? favorites.filter((id) => id !== characterId)
@@ -56,7 +47,6 @@ export function useFavorites(maxFavorites = 5) {
         ? [...favorites, characterId]
         : favorites
 
-    console.log("New favorites:", newFavorites)
 
     setFavorites(newFavorites)
     localStorage.setItem("marvelFavorites", JSON.stringify(newFavorites))

@@ -274,7 +274,6 @@ function generateMockCharacter(id: string) {
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const characterId = params.id
-    console.log(`=== CHARACTER DETAIL API - ID: ${characterId} ===`)
 
     const authParams = generateAuthParams()
 
@@ -294,10 +293,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         },
       })
 
-      console.log("Response status:", response.status)
 
       if (!response.ok) {
-        console.log("Marvel API error, returning mock data")
 
         // Usar dados mock específicos se disponíveis, senão gerar genérico
         const mockCharacter = (mockCharacterDetails as Record<number, any>)[Number(characterId)] || generateMockCharacter(characterId)
@@ -312,10 +309,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       }
 
       const data = await response.json()
-      console.log("Success! Character found:", data.data?.results?.[0]?.name || "Unknown")
       return NextResponse.json(data.data)
     } catch (fetchError) {
-      console.log("Fetch failed, returning mock data:", fetchError)
 
       // Em caso de erro de rede, retornar dados mock
       const mockCharacter = (mockCharacterDetails as Record<number, any>)[Number(characterId)] || generateMockCharacter(characterId)
