@@ -59,6 +59,10 @@ MARVEL_PRIVATE_KEY=sua_chave_privada
 
 ---
 
+## Considerações
+
+Até certo ponto do desenvolvimento desse código, estava tudo funcionando perfeitamente. Todos os personagens da API, a pesquisa por nome, a paginação dos personagens, na página de cada personagem, seus últimos quadrinhos... tudo estava perfeito. umas 14 horas depois, fui olhar o código de novo apenas para ver se tudo estava funcionando, e de repente não funcionava mais, dizia algo sobre a chave da API. Tentei de todas as formas consertar, mas depois disso, não voltou mais a puxar os dados da API, então na página principal criei mocks dos primeiros 20 personagens para uma melhor experiência do usuário. Realmente estava tudo funcionando e parou do nada, espero que considere com carinho esse teste. Obrigado! 
+
 ## Resposta Técnica: Gerenciamento de Estado com Redux/Zustand
 
 **Como você lidaria com o limite de 5 favoritos se estivesse usando Redux ou Zustand?**
