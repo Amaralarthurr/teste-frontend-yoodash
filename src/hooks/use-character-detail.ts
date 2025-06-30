@@ -17,13 +17,9 @@ export function useCharacterDetail(characterId: string) {
       }
 
       try {
-        console.log("=== FETCHING CHARACTER DATA ===")
-        console.log("Character ID:", characterId)
 
         setLoading(true)
 
-        // Fetch character details
-        console.log("1. Fetching character details...")
         const characterResponse = await fetch(`/api/character/${characterId}`)
 
         if (!characterResponse.ok) {
@@ -40,11 +36,8 @@ export function useCharacterDetail(characterId: string) {
           throw new Error("Character not found")
         }
 
-        console.log("✓ Character loaded:", characterData.results[0].name)
         setCharacter(characterData.results[0])
 
-        // Fetch comics
-        console.log("2. Fetching character comics...")
         try {
           const comicsResponse = await fetch(`/api/character/${characterId}/comics`)
 
@@ -55,7 +48,6 @@ export function useCharacterDetail(characterId: string) {
               console.error("Comics API returned error:", comicsData.error)
               setComics([])
             } else if (comicsData.results && Array.isArray(comicsData.results)) {
-              console.log("✓ Comics loaded from Marvel API:", comicsData.results.length)
               setComics(comicsData.results)
             } else {
               console.warn("No comics results found")
@@ -71,8 +63,6 @@ export function useCharacterDetail(characterId: string) {
           setComics([])
         }
 
-        // Fetch events
-        console.log("3. Fetching character events...")
         try {
           const eventsResponse = await fetch(`/api/character/${characterId}/events`)
 
@@ -80,7 +70,6 @@ export function useCharacterDetail(characterId: string) {
             const eventsData = await eventsResponse.json()
 
             if (eventsData.results && Array.isArray(eventsData.results)) {
-              console.log("✓ Events loaded:", eventsData.results.length)
               setEvents(eventsData.results)
             } else {
               setEvents([])

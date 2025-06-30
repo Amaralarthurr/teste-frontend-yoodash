@@ -18,32 +18,21 @@ export default function CharacterDetailPage() {
   const params = useParams()
   const characterId = params.id as string
 
-  console.log("=== CHARACTER PAGE RENDER ===")
-  console.log("Character ID from params:", characterId)
 
   const { favorites, toggleFavorite } = useFavorites(MAX_FAVORITES)
   const { character, loading,  setComics, getLatestComic, displayedComics } =
     useCharacterDetail(characterId)
   const { searchTerm, setSearchTerm, handleSearch } = useCharacterSearch()
 
-  console.log("Page state:", {
-    loading,
-    hasCharacter: !!character,
-    characterName: character?.name,
-    comicsCount: displayedComics.length,
-  })
 
   if (loading) {
-    console.log("Showing loading state")
     return <LoadingState />
   }
 
   if (!loading && !character) {
-    console.log("Showing not found state")
     return <NotFoundState characterId={characterId} />
   }
 
-  console.log("Showing character details for:", character?.name)
   const isFavorite = favorites.includes(character!.id)
 
   return (

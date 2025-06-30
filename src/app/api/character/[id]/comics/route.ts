@@ -20,7 +20,6 @@ function generateAuthParams() {
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const characterId = params.id
-    console.log(`=== FETCHING REAL COMICS FOR CHARACTER: ${characterId} ===`)
 
     const authParams = generateAuthParams()
 
@@ -33,7 +32,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     })
 
     const url = `${MARVEL_BASE_URL}/characters/${characterId}/comics?${urlParams}`
-    console.log("Making request to Marvel API...")
 
     const response = await fetch(url, {
       headers: {
@@ -41,8 +39,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         Accept: "application/json",
       },
     })
-
-    console.log("Marvel API Response Status:", response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -55,30 +51,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     const data = await response.json()
 
-    console.log("Marvel API Response:", {
-      code: data.code,
-      status: data.status,
-      totalResults: data.data?.total || 0,
-      returnedResults: data.data?.results?.length || 0,
-    })
 
     if (data.code !== 200) {
       console.error("Marvel API returned error:", data.code, data.status)
       return NextResponse.json({ error: `Marvel API error: ${data.status}` }, { status: 400 })
     }
 
-    // Log first comic to verify data structure
     if (data.data?.results?.length > 0) {
       const firstComic = data.data.results[0]
-      console.log("First comic from API:", {
-        id: firstComic.id,
-        title: firstComic.title,
-        thumbnail: firstComic.thumbnail,
-        hasDate: firstComic.dates?.length > 0,
-      })
     }
 
-    console.log(`SUCCESS: Found ${data.data?.results?.length || 0} comics from Marvel API`)
 
     return NextResponse.json(data.data)
   } catch (error) {

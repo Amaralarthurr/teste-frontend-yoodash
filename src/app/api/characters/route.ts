@@ -21,7 +21,6 @@ function generateAuthParams() {
 async function fetchWithRetry(url: string, maxRetries = 3, delay = 1000) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`Attempt ${attempt}/${maxRetries} - Fetching:`, url.replace(MARVEL_PUBLIC_KEY, "PUBLIC_KEY"))
 
       const response = await fetch(url, {
         headers: {
@@ -30,12 +29,10 @@ async function fetchWithRetry(url: string, maxRetries = 3, delay = 1000) {
         },
       })
 
-      console.log(`Attempt ${attempt} - Status:`, response.status)
 
       // Se for 418 (teapot) ou 503 (service unavailable), tenta novamente
       if (response.status === 418 || response.status === 503) {
         if (attempt < maxRetries) {
-          console.log(`Server unavailable (${response.status}), retrying in ${delay}ms...`)
           await new Promise((resolve) => setTimeout(resolve, delay))
           delay *= 2 // Exponential backoff
           continue
@@ -46,7 +43,6 @@ async function fetchWithRetry(url: string, maxRetries = 3, delay = 1000) {
     } catch (error) {
       console.error(`Attempt ${attempt} failed:`, error)
       if (attempt < maxRetries) {
-        console.log(`Retrying in ${delay}ms...`)
         await new Promise((resolve) => setTimeout(resolve, delay))
         delay *= 2
       } else {
@@ -325,24 +321,14 @@ const mockCharacters = [
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("=== CHARACTERS API DEBUG ===")
-    console.log("Public Key:", MARVEL_PUBLIC_KEY ? "LOADED" : "NOT_LOADED")
-    console.log("Private Key:", MARVEL_PRIVATE_KEY ? "LOADED" : "NOT_LOADED")
 
     const { searchParams } = new URL(request.url)
     const nameStartsWith = searchParams.get("nameStartsWith")
     const offset = searchParams.get("offset") || "0"
     const limit = searchParams.get("limit") || "20"
 
-    console.log("Query params:", { nameStartsWith, offset, limit })
 
     const authParams = generateAuthParams()
-
-    console.log("Auth params generated:", {
-      timestamp: authParams.ts,
-      publicKey: authParams.apikey.substring(0, 8) + "...",
-      hash: authParams.hash.substring(0, 8) + "...",
-    })
 
     const params = new URLSearchParams({
       ts: authParams.ts,
@@ -366,15 +352,12 @@ export async function GET(request: NextRequest) {
     }
 
     const responseText = await response.text()
-    console.log("Final response status:", response.status)
-    console.log("Response text preview:", responseText.substring(0, 200))
 
     if (!response.ok) {
       console.error("Marvel API Error Response:", responseText)
 
       // Se for erro 418 (teapot), retornar dados mock para não quebrar a aplicação
       if (response.status === 418) {
-        console.log("Returning mock data due to teapot error")
 
         // Filtrar dados mock se houver busca
         let filteredMockData = mockCharacters
@@ -384,7 +367,6 @@ export async function GET(request: NextRequest) {
           )
         }
 
-        // Aplicar paginação aos dados mock
         const offsetNum = Number.parseInt(offset)
         const limitNum = Number.parseInt(limit)
         const paginatedData = filteredMockData.slice(offsetNum, offsetNum + limitNum)
@@ -439,9 +421,6 @@ export async function GET(request: NextRequest) {
         { status: 500 },
       )
     }
-
-    console.log("Success! Characters found:", data.data?.results?.length || 0)
-    console.log("=== END CHARACTERS API DEBUG ===")
 
     return NextResponse.json(data.data)
   } catch (error) {

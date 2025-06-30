@@ -41,12 +41,6 @@ export function useCharacters(limit = 20): UseCharactersReturn {
           params.append("nameStartsWith", currentSearch.trim())
         }
 
-        console.log("=== FETCHING CHARACTERS ===")
-        console.log("Params:", {
-          limit,
-          offset: currentOffset,
-          search: currentSearch,
-        })
 
         const response = await fetch(`/api/characters?${params}`)
 
@@ -57,35 +51,20 @@ export function useCharacters(limit = 20): UseCharactersReturn {
 
         const data = await response.json()
 
-        console.log("=== CHARACTERS API RESPONSE ===")
-        console.log("Response data:", {
-          resultsCount: data.results?.length || 0,
-          total: data.total || 0,
-          offset: data.offset || 0,
-          limit: data.limit || 0,
-        })
 
         setCharacters(data.results || [])
         setTotalCharacters(data.total || 0)
 
-        // Update offset if a new value was passed
         if (newOffset !== undefined) {
           setOffset(newOffset)
         }
 
-        // Update searchTerm if a new value was passed
         if (search !== undefined) {
           setSearchTerm(search)
         }
-
-        console.log("=== STATE UPDATED ===")
-        console.log("Characters set:", data.results?.length || 0)
-        console.log("Total characters set:", data.total || 0)
-        console.log("Offset set:", newOffset !== undefined ? newOffset : offset)
       } catch (err) {
         console.error("Error fetching characters:", err)
         setError(err instanceof Error ? err.message : "Failed to fetch characters")
-        // Set some default values to test pagination
         setTotalCharacters(100)
         setCharacters([])
       } finally {
